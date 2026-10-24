@@ -7,7 +7,10 @@ export const APP_CONFIG = {
   version: packageJson.version,
   copyright: `© ${currentYear}, ARTEX.`,
   meta: {
-    title: "ARTEX — 自主渗透测试控制台",
-    description: "LLM 驱动的自主渗透测试系统控制台",
+    // Default to English, but support bilingual
+    title: "ARTEX — Autonomous Penetration Testing Console",
+    titleZh: "ARTEX — 自主渗透测试控制台",
+    description: "LLM-Powered Autonomous Penetration Testing System Console",
+    descriptionZh: "LLM 驱动的自主渗透测试系统控制台",
   },
 };

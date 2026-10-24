@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { auth } from "@/lib/auth";
 import { cn, getInitials } from "@/lib/utils";
+import { useLanguage } from "@/hooks/use-language-context";
+import { t } from "@/lib/translations";
 
 import { ChangePasswordDialog } from "./change-password-dialog";
 
@@ -30,6 +32,7 @@ export function AccountSwitcher({
 }) {
   const [activeUser, setActiveUser] = useState(users[0]);
   const [pwOpen, setPwOpen] = useState(false);
+  const { language } = useLanguage();
 
   function handleLogout() {
     auth.clearToken();
@@ -80,11 +83,11 @@ export function AccountSwitcher({
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setPwOpen(true)}>
             <KeyRound />
-            修改密码
+            {t('account.change_password', language)}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
             <LogOut />
-            退出登录
+            {t('account.logout', language)}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

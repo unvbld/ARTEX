@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 
 import { ChevronRight, MailIcon, PlusCircleIcon } from "lucide-react";
 import { api } from "@/lib/api";
+import { useLanguage } from "@/hooks/use-language-context";
+import { t } from "@/lib/translations";
 
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -86,7 +88,7 @@ function hasSubItems(item: NavMainItem): item is NavMainParentItem {
 
 export function NavMain({ items }: NavMainProps) {
   const rawPath = usePathname();
-  // 路由段含中文，pathname 可能是百分号编码，解码后再与导航 url 比较，保证高亮命中。
+  const { language } = useLanguage();
   const path = (() => {
     try {
       return decodeURIComponent(rawPath);
@@ -99,7 +101,6 @@ export function NavMain({ items }: NavMainProps) {
     if (hasSubItems(item)) {
       return item.subItems.some((sub) => path.startsWith(sub.url));
     }
-
     return path === item.url;
   };
 
@@ -111,13 +112,19 @@ export function NavMain({ items }: NavMainProps) {
     return item.subItems.some((sub) => path.startsWith(sub.url));
   };
 
+  // resolve displayed title based on language
+  function getTitle(item: NavMainItem): string {
+    if (language === 'en' && 'titleEn' in item && item.titleEn) return item.titleEn;
+    return item.title;
+  }
+
   return (
     <>
       {items.map((group) => (
         <SidebarGroup key={group.id}>
           {group.label && (
             <SidebarGroupLabel className="group-data-[collapsible=icon]:pointer-events-none">
-              {group.label}
+              {group.id === 1 ? t('sidebar.features', language) : group.id === 2 ? t('sidebar.system', language) : group.label}
             </SidebarGroupLabel>
           )}
           <SidebarGroupContent>
@@ -125,7 +132,7 @@ export function NavMain({ items }: NavMainProps) {
               {group.items.map((item) => (
                 <NavItem
                   key={item.id}
-                  item={item}
+                  item={{ ...item, title: getTitle(item) }}
                   isItemActive={isItemActive}
                   isSubItemActive={isSubItemActive}
                   isSubmenuOpen={isSubmenuOpen}
