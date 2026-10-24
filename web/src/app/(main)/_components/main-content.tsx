@@ -10,6 +10,9 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
+import { LanguageSelector } from "@/components/language-selector";
+import { useLanguage } from "@/hooks/use-language-context";
+import { t } from "@/lib/translations";
 import { AccountSwitcher } from "./sidebar/account-switcher";
 import { LayoutControls } from "./sidebar/layout-controls";
 import { SearchDialog } from "./sidebar/search-dialog";
@@ -34,6 +37,7 @@ function isFullBleed(pathname: string) {
 export function MainContent({ children }: { children: ReactNode }) {
   const currentUser = useCurrentUser();
   const pathname = usePathname();
+  const { language } = useLanguage();
   const [version, setVersion] = useState("");
 
   useEffect(() => {
@@ -66,9 +70,10 @@ export function MainContent({ children }: { children: ReactNode }) {
           </div>
           <div className="flex items-center gap-2">
             {version && (
-              <span className="font-medium text-muted-foreground text-xs tabular-nums">版本 · {version}</span>
+              <span className="font-medium text-muted-foreground text-xs tabular-nums">{t('navbar.version', language)} · {version}</span>
             )}
             <UpdateBadge />
+            <LanguageSelector />
             <LayoutControls />
             <ThemeSwitcher />
             <AccountSwitcher users={[currentUser]} />

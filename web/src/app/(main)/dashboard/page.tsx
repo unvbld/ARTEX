@@ -40,13 +40,15 @@ import type {
   UsageStats,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/use-language-context";
+import { t } from "@/lib/translations";
 
 // ── chart constants ───────────────────────────────────────────────────────────
 
 const dailyTrendConfig = {
-  input: { label: "输入", color: "hsl(217 91% 60%)" },
-  output: { label: "输出", color: "hsl(263 70% 60%)" },
-  cacheRead: { label: "缓存读", color: "hsl(160 60% 45%)" },
+  input: { label: "Input", color: "hsl(217 91% 60%)" },
+  output: { label: "Output", color: "hsl(263 70% 60%)" },
+  cacheRead: { label: "Cache Read", color: "hsl(160 60% 45%)" },
 } satisfies ChartConfig;
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -55,12 +57,12 @@ function fmtRel(ts?: string | number): string {
   if (!ts) return "—";
   const ms = Date.now() - (typeof ts === "number" ? ts * 1000 : Date.parse(ts as string));
   const s = Math.floor(ms / 1000);
-  if (s < 60) return `${s}s 前`;
+  if (s < 60) return `${s}s ago`;
   const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m 前`;
+  if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h 前`;
-  return `${Math.floor(h / 24)}d 前`;
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
 function fmtTokens(n: number): string {
@@ -70,12 +72,12 @@ function fmtTokens(n: number): string {
 }
 
 const ASSET_TYPE_LABELS: Record<string, string> = {
-  root_domain: "根域名",
+  root_domain: "Root Domain",
   ip: "IP",
-  subdomain: "子域名",
-  app: "应用",
-  service: "服务",
-  endpoint: "端点",
+  subdomain: "Subdomain",
+  app: "App",
+  service: "Service",
+  endpoint: "Endpoint",
 };
 
 const ASSET_COLORS: Record<string, string> = {
@@ -130,6 +132,7 @@ function SectionTitle({
 // ── page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const { language } = useLanguage();
   // data state
   const [tasks, setTasks] = React.useState<Task[]>([]);
   const [findings, setFindings] = React.useState<Finding[]>([]);
@@ -496,18 +499,18 @@ export default function DashboardPage() {
       {/* ── Header ── */}
       <div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">总览</h1>
-          <p className="text-xs text-muted-foreground">系统全局状态 · 实时刷新</p>
+          <h1 className="text-lg font-semibold tracking-tight">{t('dash.title', language)}</h1>
+          <p className="text-xs text-muted-foreground">{t('dash.subtitle', language)}</p>
         </div>
       </div>
 
       {/* ── Row 1: 5 stat cards ── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {/* 活跃任务 */}
+        {/* Active Tasks */}
         <Card className="gap-1">
           <CardHeader className="pb-0">
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <TargetIcon className="size-3" /> 活跃任务
+              <TargetIcon className="size-3" /> {t('dash.active_tasks', language)}
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-2xl font-semibold tabular-nums">{tasksByStatus.running ?? 0}</span>
@@ -515,45 +518,45 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-x-2.5 gap-y-0.5 text-[10px]">
-            {(tasksByStatus.running ?? 0) > 0 && <span className="text-blue-400">探索 {tasksByStatus.running}</span>}
-            {(tasksByStatus.paused ?? 0) > 0 && <span className="text-amber-400">暂停 {tasksByStatus.paused}</span>}
-            {(tasksByStatus.done ?? 0) > 0 && <span className="text-emerald-400">完成 {tasksByStatus.done}</span>}
-            {tasks.length === 0 && <span className="text-muted-foreground">暂无任务</span>}
+            {(tasksByStatus.running ?? 0) > 0 && <span className="text-blue-400">{t('dash.exploring', language)} {tasksByStatus.running}</span>}
+            {(tasksByStatus.paused ?? 0) > 0 && <span className="text-amber-400">{t('dash.paused', language)} {tasksByStatus.paused}</span>}
+            {(tasksByStatus.done ?? 0) > 0 && <span className="text-emerald-400">{t('dash.done', language)} {tasksByStatus.done}</span>}
+            {tasks.length === 0 && <span className="text-muted-foreground">{t('dash.no_tasks', language)}</span>}
           </CardContent>
         </Card>
 
-        {/* 确认发现 */}
+        {/* Confirmed Findings */}
         <Card className="gap-1">
           <CardHeader className="pb-0">
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <BugIcon className="size-3" /> 确认发现
+              <BugIcon className="size-3" /> {t('dash.confirmed_findings', language)}
             </div>
             <div className="text-2xl font-semibold tabular-nums">{findings.length}</div>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2.5 text-[10px]">
-            <span className="text-rose-500">严重 {findingsBySev.critical}</span>
-            <span className="text-red-400">高危 {findingsBySev.high}</span>
-            <span className="text-amber-400">中危 {findingsBySev.medium}</span>
-            <span className="text-slate-400">低危 {findingsBySev.low}</span>
+            <span className="text-rose-500">{t('dash.critical', language)} {findingsBySev.critical}</span>
+            <span className="text-red-400">{t('dash.high', language)} {findingsBySev.high}</span>
+            <span className="text-amber-400">{t('dash.medium', language)} {findingsBySev.medium}</span>
+            <span className="text-slate-400">{t('dash.low', language)} {findingsBySev.low}</span>
           </CardContent>
         </Card>
 
-        {/* 资产节点 */}
+        {/* Asset Nodes */}
         <Card className="gap-1">
           <CardHeader className="pb-0">
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <NetworkIcon className="size-3" /> 资产节点
+              <NetworkIcon className="size-3" /> {t('dash.asset_nodes', language)}
             </div>
             <div className="text-2xl font-semibold tabular-nums">{totalAssets}</div>
           </CardHeader>
-          <CardContent className="text-[10px] text-muted-foreground">跨任务共享</CardContent>
+          <CardContent className="text-[10px] text-muted-foreground">{t('dash.cross_task', language)}</CardContent>
         </Card>
 
-        {/* 流量交互 */}
+        {/* Traffic */}
         <Card className="gap-1">
           <CardHeader className="pb-0">
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <ActivityIcon className="size-3" /> 流量交互
+              <ActivityIcon className="size-3" /> {t('dash.traffic', language)}
             </div>
             <div className="text-2xl font-semibold tabular-nums">{traffic.length}</div>
           </CardHeader>
@@ -561,26 +564,26 @@ export default function DashboardPage() {
             {settings?.traffic_capture ? (
               <>
                 <LiveDot />
-                <span>录制中</span>
+                <span>{t('dash.recording', language)}</span>
               </>
             ) : (
-              <span>捕获未开启</span>
+              <span>{t('dash.capture_off', language)}</span>
             )}
           </CardContent>
         </Card>
 
-        {/* LLM 用量 */}
+        {/* Token Usage */}
         <Card className="gap-1">
           <CardHeader className="pb-0">
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <ZapIcon className="size-3" /> Token 用量
+              <ZapIcon className="size-3" /> {t('dash.token_usage', language)}
             </div>
             <div className="text-2xl font-semibold tabular-nums">
               {fmtTokens(displayedTokens.input + displayedTokens.output) || "—"}
             </div>
           </CardHeader>
           <CardContent className="text-[10px] text-muted-foreground">
-            入 {fmtTokens(displayedTokens.input)}（含缓存 {fmtTokens(displayedTokens.cacheRead)}）· 出{" "}
+            {t('dash.token_in', language)} {fmtTokens(displayedTokens.input)}{t('dash.token_incache', language)} {fmtTokens(displayedTokens.cacheRead)}）· {t('dash.token_out', language)}{" "}
             {fmtTokens(displayedTokens.output)}
           </CardContent>
         </Card>
@@ -592,13 +595,12 @@ export default function DashboardPage() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 text-xs font-semibold">
             <ZapIcon className="size-3.5 text-muted-foreground" />
-            LLM Token 消耗
-            {/* 数据源开关：旧版=activity 统计（含历史任务），新版=llm_usage 计量账本（更准，仅覆盖启用后） */}
+            {t('dash.llm_tokens', language)}
             <div className="ml-1 flex gap-0.5 rounded-md border bg-muted/30 p-0.5">
               {(
                 [
-                  { v: "old", label: "旧版" },
-                  { v: "new", label: "新版" },
+                  { v: "old", label: t('dash.old_ver', language) },
+                  { v: "new", label: t('dash.new_ver', language) },
                 ] as const
               ).map(({ v, label }) => (
                 <button
@@ -607,8 +609,8 @@ export default function DashboardPage() {
                   onClick={() => setTokenVersion(v)}
                   title={
                     v === "new"
-                      ? "新版：来自 llm_usage 计量账本，逐次调用精确、含中断消耗；仅覆盖启用后的数据"
-                      : "旧版：来自 activity 统计（含历史任务），中断消耗不计、无法精确到模型"
+                      ? "New: from llm_usage ledger, precise per-call, includes interrupted; covers only after activation"
+                      : "Legacy: from activity stats (includes history), interrupts not counted, no per-model detail"
                   }
                   className={cn(
                     "rounded px-2 py-0.5 text-[9px] font-medium transition-colors",
