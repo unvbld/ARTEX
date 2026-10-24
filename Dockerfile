@@ -10,6 +10,20 @@
 #   cp -r web/out server/webui/dist
 #   CGO_ENABLED=0 GOARCH=amd64 go build -tags embedui -o dist/amd64/artex ./cmd/artex
 #   docker build -t artex:local .
+
+FROM node:20-alpine AS frontend-builder
+WORKDIR /app/web
+COPY web/package*.json ./
+RUN npm ci
+COPY web/ ./
+RUN npm run build:static
+
+FROM golang:alpine AS backend-builder
+WORKDIR /app
+COPY . .
+COPY --from=frontend-builder /app/web/out ./server/webui/dist
+RUN CGO_ENABLED=0 GOOS=linux go build -tags embedui -trimpath -o artex-bin ./cmd/artex
+
 FROM python:3.12-slim-bookworm
 ARG TARGETARCH
 # 常用工具：ripgrep / curl / vim，加一批 recon 常备件（按需增删）。
@@ -31,7 +45,8 @@ RUN npm install -g @playwright/mcp@latest @playwright/cli@latest playwright@late
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 # 预编译好的对应架构二进制（dist/amd64/artex 或 dist/arm64/artex）
-COPY dist/${TARGETARCH}/artex /app/artex
+# COPY dist/${TARGETARCH}/artex /app/artex ini gw yg comment
+COPY --from=backend-builder /app/artex-bin /app/artex
 # 守护启动脚本：进程退出后按退出码决定是否重新拉起，页面一键更新靠它完成换装。
 # 它同时负责把 SIGTERM 转发给 artex —— docker stop 只把信号发给 PID 1，
 # 不转发的话 artex 收不到、做不了优雅关闭，10 秒后被 SIGKILL 硬杀。
